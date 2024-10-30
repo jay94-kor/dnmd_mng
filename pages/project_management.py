@@ -1,14 +1,9 @@
 import streamlit as st
 from database import get_connection
-from auth import log_edit
 from utils import calculate_budget
 
-def edit_project(project_id: int, user: dict):
+def edit_project(project_id: int):
     """프로젝트 수정 기능"""
-    if not user['is_admin']:
-        st.error("관리자만 프로젝트를 수정할 수 있습니다.")
-        return
-    
     conn = get_connection()
     cursor = conn.cursor()
     
@@ -41,16 +36,6 @@ def edit_project(project_id: int, user: dict):
         ) / 100.0
         
         if st.button("수정 사항 저장", type="primary"):
-            # 변경된 필드 확인 및 기록
-            if new_name != project[2]:
-                log_edit('project', project_id, 'project_name', project[2], new_name, 'UPDATE')
-            if new_manager != project[3]:
-                log_edit('project', project_id, 'project_manager', project[3], new_manager, 'UPDATE')
-            if new_contract_amount != project[4]:
-                log_edit('project', project_id, 'contract_amount', str(project[4]), str(new_contract_amount), 'UPDATE')
-            if new_advance_rate != project[7]:
-                log_edit('project', project_id, 'advance_rate', str(project[7]), str(new_advance_rate), 'UPDATE')
-            
             # 새로운 예산 계산
             budget = calculate_budget(new_contract_amount, new_advance_rate, project[8], project[9])
             
@@ -79,26 +64,6 @@ def edit_project(project_id: int, user: dict):
             conn.commit()
             st.success("프로젝트 정보가 수정되었습니다.")
             st.rerun()
-        
-        # 수정 이력 표시
-        st.write("### 수정 이력")
-        cursor.execute("""
-            SELECT h.edit_time, u.full_name, h.field_name, h.old_value, h.new_value
-            FROM project_edit_history h
-            JOIN users u ON h.user_id = u.user_id
-            WHERE h.project_id = %s
-            ORDER BY h.edit_time DESC
-        """, (project_id,))
-        
-        history = cursor.fetchall()
-        if history:
-            for edit in history:
-                st.write(f"""
-                {edit[0].strftime('%Y-%m-%d %H:%M:%S')} - {edit[1]}
-                - {edit[2]}: {edit[3]} → {edit[4]}
-                """)
-        else:
-            st.info("아직 수정 이력이 없습니다.")
     
     finally:
         conn.close()

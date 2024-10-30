@@ -7,22 +7,29 @@ from datetime import datetime
 def basic_info():
     # 처음 페이지 진입시 주의사항 팝업
     if 'showed_warning' not in st.session_state:
-        st.warning("""
-        ⚠️ 프로젝트 정보 입력 시 주의사항
+        st.markdown("""
+            <div class="warning-box">
+                <h3>⚠️ 프로젝트 정보 입력 시 주의사항</h3>
+                <ol>
+                    <li>모든 정보는 신중하게 입력해주세요. 한번 등록된 정보는 수정이 어렵습니다.</li>
+                    <li>계약금액은 부가세가 포함된 금액을 입력해주세요.</li>
+                    <li>프로젝트 코드는 고유한 값이어야 합니다.</li>
+                    <li>선금 비율 설정 시 계약서의 내용과 일치하는지 확인해주세요.</li>
+                </ol>
+            </div>
+        """, unsafe_allow_html=True)
         
-        1. 모든 정보는 신중하게 입력해주세요. 한번 등록된 정보는 수정이 어렵습니다.
-        2. 계약금액은 부가세가 포함된 금액을 입력해주세요.
-        3. 프로젝트 코드는 고유한 값이어야 합니다.
-        4. 선금 비율 설정 시 계약서의 내용과 일치하는지 확인해주세요.
-        
-        위 내용을 확인하셨다면 '확인' 버튼을 눌러주세요.
-        """)
-        if st.button("확인"):
+        if st.button("확인", type="primary", use_container_width=True):
             st.session_state.showed_warning = True
             st.rerun()
         return
+
+    st.markdown("<h1 class='big-font'>프로젝트 기본정보 입력</h1>", unsafe_allow_html=True)
     
-    st.title("프로젝트 기본정보 입력")
+    # 입력 폼을 카드 형태로 표시
+    st.markdown("""
+        <div style="padding: 1rem; background-color: #f8f9fa; border-radius: 10px; margin-bottom: 2rem;">
+    """, unsafe_allow_html=True)
     
     # 2단 레이아웃
     col1, col2 = st.columns(2)

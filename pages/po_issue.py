@@ -67,24 +67,25 @@ def generate_po_number(project_id, cursor):
     return new_po_number
 
 def po_issue():
-    # 처음 페이지 진입시 주의사항 팝업
     if 'showed_po_warning' not in st.session_state:
-        st.warning("""
-        ⚠️ PO 발행 시 주의사항
+        st.markdown("""
+            <div class="warning-box">
+                <h3>⚠️ PO 발행 시 주의사항</h3>
+                <ol>
+                    <li>모든 정보는 신중하게 입력해주세요. 한번 발행된 PO는 수정이 어렵습니다.</li>
+                    <li>금액은 부가세가 별도로 계산됩니다.</li>
+                    <li>적요는 최소 10글자 이상 상세하게 작성해주세요. (띄어쓰기 제외)</li>
+                    <li>계약서와 견적서는 필수 첨부사항입니다.</li>
+                    <li>견적서는 상세하게 작성되어야 하며, 미흡할 경우 반려될 수 있습니다.</li>
+                </ol>
+            </div>
+        """, unsafe_allow_html=True)
         
-        1. 모든 정보는 신중하게 입력해주세요. 한번 발행된 PO는 수정이 어렵습니다.
-        2. 금액은 부가세가 별도로 계산됩니다.
-        3. 적요는 최소 10글자 이상 상세하게 작성해주세요. (띄어쓰기 제외)
-        4. 계약서와 견적서는 필수 첨부사항입니다.
-        5. 견적서는 상세하게 작성되어야 하며, 미흡할 경우 반려될 수 있습니다.
-        
-        위 내용을 확인하셨다면 '확인' 버튼을 눌러주세요.
-        """)
-        if st.button("확인"):
+        if st.button("확인", type="primary", use_container_width=True):
             st.session_state.showed_po_warning = True
             st.rerun()
         return
-    
+
     st.title("PO 발행 관리")
 
     # 세션 상태 초기화

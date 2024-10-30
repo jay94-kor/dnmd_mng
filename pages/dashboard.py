@@ -13,17 +13,21 @@ def format_percentage(value):
     return f"{value:.1%}"
 
 def show_dashboard():
-    st.title("프로젝트 대시보드")
+    st.markdown("<h1 class='big-font'>프로젝트 대시보드</h1>", unsafe_allow_html=True)
 
     # 용어 설명 추가
     with st.expander("💡 용어 설명"):
         st.markdown("""
-        - **PS (비용 대비 절감)**: 프로젝트에서 절감된 비용을 의미합니다.
-        - **PM (일반관리비+기업마진)**: 프로젝트의 일반 관리비와 기업 마진을 합한 금액입니다.
-        - **IC (내부 인건비)**: 프로젝트에 투입된 내부 인건비를 의미합니다.
-        - **PP (PS+PM)**: 비용 대비 절감과 일반관리비 및 기업마진의 합입니다.
-        - **IP (PS+PM+IC)**: 비용 대비 절감, 일반관리비 및 기업마진, 내부 인건비의 총합입니다.
-        """)
+            <div class="info-box">
+                <ul>
+                    <li><strong>PS (비용 대비 절감)</strong>: 프로젝트에서 절감된 비용</li>
+                    <li><strong>PM (일반관리비+기업마진)</strong>: 프로젝트의 일반 관리비와 기업 마진의 합</li>
+                    <li><strong>IC (내부 인건비)</strong>: 프로젝트에 투입된 내부 인건비</li>
+                    <li><strong>PP (PS+PM)</strong>: 비용 대비 절감과 일반관리비 및 기업마진의 합</li>
+                    <li><strong>IP (PS+PM+IC)</strong>: 비용 대비 절감, 일반관리비 및 기업마진, 내부 인건비의 총합</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
 
     conn = get_connection()
     cursor = conn.cursor()

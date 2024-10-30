@@ -1,84 +1,73 @@
-import mysql.connector
+import sqlite3
+from datetime import datetime
+import os
+
+DB_PATH = "project_management.db"
 
 def get_connection():
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="project_management"
-    )
+    """SQLite 데이터베이스 연결 생성"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # 컬럼명으로 접근 가능하도록 설정
     return conn
 
 def create_tables():
+    """데이터베이스 테이블 생성"""
     conn = get_connection()
     cursor = conn.cursor()
-
-    # 사용자 테이블 생성
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(50) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL,
-            full_name VARCHAR(100) NOT NULL,
-            is_admin BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_login TIMESTAMP
-        );
-    ''')
 
     # 프로젝트 기본정보 테이블 생성
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS project_info (
-            project_id INT AUTO_INCREMENT PRIMARY KEY,
-            project_code VARCHAR(100) NOT NULL UNIQUE,
-            project_name VARCHAR(255) NOT NULL,
-            project_manager VARCHAR(50) NOT NULL,  -- 담당자 필드 추가
-            contract_amount BIGINT NOT NULL,
-            supply_amount BIGINT NOT NULL,
-            tax_amount BIGINT NOT NULL,
-            advance_rate FLOAT NOT NULL,
-            balance_rate FLOAT NOT NULL,
+            project_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_code TEXT NOT NULL UNIQUE,
+            project_name TEXT NOT NULL,
+            project_manager TEXT NOT NULL,
+            contract_amount INTEGER NOT NULL,
+            supply_amount INTEGER NOT NULL,
+            tax_amount INTEGER NOT NULL,
+            advance_rate REAL NOT NULL,
+            balance_rate REAL NOT NULL,
             contract_start_date DATE NOT NULL,
             contract_end_date DATE NOT NULL,
-            company_margin_rate FLOAT DEFAULT 0.1,
-            management_fee_rate FLOAT DEFAULT 0.08,
-            min_internal_labor_rate FLOAT NOT NULL,
-            min_internal_labor BIGINT NOT NULL,
-            advance_budget BIGINT NOT NULL,
-            balance_budget BIGINT NOT NULL,
-            total_budget BIGINT NOT NULL,
+            company_margin_rate REAL NOT NULL,
+            management_fee_rate REAL NOT NULL,
+            min_internal_labor_rate REAL NOT NULL,
+            min_internal_labor INTEGER NOT NULL,
+            advance_budget INTEGER NOT NULL,
+            balance_budget INTEGER NOT NULL,
+            total_budget INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     ''')
 
     # PO 발행 테이블 생성
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS po_issue (
-            po_id INT AUTO_INCREMENT PRIMARY KEY,
-            po_number VARCHAR(100) NOT NULL UNIQUE,
-            project_id INT NOT NULL,
-            supplier_name VARCHAR(255) NOT NULL,
-            description TEXT NOT NULL,  -- 적요 필드 추가
-            detailed_memo TEXT,  -- 상세메모 필드 추가
-            total_amount BIGINT NOT NULL,
-            supply_amount BIGINT NOT NULL,
-            tax_or_withholding BIGINT NOT NULL,
-            advance_rate FLOAT NOT NULL,
-            balance_rate FLOAT NOT NULL,
-            advance_amount BIGINT NOT NULL,
-            balance_amount BIGINT NOT NULL,
-            category VARCHAR(100) NOT NULL,
-            contract_file LONGBLOB NOT NULL,  -- 계약 파일 필드 추가
-            contract_filename VARCHAR(255) NOT NULL,  -- 계약 파일명 필드 추가
-            estimate_file LONGBLOB NOT NULL,  -- 견적 파일 필드 추가
-            estimate_filename VARCHAR(255) NOT NULL,  -- 견적 파일명 필드 추가
-            business_cert_file LONGBLOB NOT NULL,  -- 사업자 등록증 파일 필드 추가
-            business_cert_filename VARCHAR(255) NOT NULL,  -- 사업자 등록증 파일명 필드 추가
-            bank_file LONGBLOB NOT NULL,  -- 통장 사본 파일 필드 추가
-            bank_filename VARCHAR(255) NOT NULL,  -- 통장 사본 파일명 필드 추가
+            po_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            po_number TEXT NOT NULL UNIQUE,
+            project_id INTEGER NOT NULL,
+            supplier_name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            detailed_memo TEXT,
+            total_amount INTEGER NOT NULL,
+            supply_amount INTEGER NOT NULL,
+            tax_or_withholding INTEGER NOT NULL,
+            advance_rate REAL NOT NULL,
+            balance_rate REAL NOT NULL,
+            advance_amount INTEGER NOT NULL,
+            balance_amount INTEGER NOT NULL,
+            category TEXT NOT NULL,
+            contract_file BLOB NOT NULL,
+            contract_filename TEXT NOT NULL,
+            estimate_file BLOB NOT NULL,
+            estimate_filename TEXT NOT NULL,
+            business_cert_file BLOB NOT NULL,
+            business_cert_filename TEXT NOT NULL,
+            bank_file BLOB NOT NULL,
+            bank_filename TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (project_id) REFERENCES project_info(project_id)
         );
     ''')
@@ -86,60 +75,17 @@ def create_tables():
     # 프로젝트 운영 성적 테이블 생성
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS project_performance (
-            performance_id INT AUTO_INCREMENT PRIMARY KEY,
-            project_id INT NOT NULL,
-            project_savings BIGINT NOT NULL,
-            project_savings_rate FLOAT NOT NULL,
-            project_profit BIGINT NOT NULL,
-            project_profit_rate FLOAT NOT NULL,
-            internal_profit BIGINT NOT NULL,
-            internal_profit_rate FLOAT NOT NULL,
+            performance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            project_savings INTEGER NOT NULL,
+            project_savings_rate REAL NOT NULL,
+            project_profit INTEGER NOT NULL,
+            project_profit_rate REAL NOT NULL,
+            internal_profit INTEGER NOT NULL,
+            internal_profit_rate REAL NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (project_id) REFERENCES project_info(project_id)
-        );
-    ''')
-
-    # 수정 이력 테이블 (프로젝트) 생성
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS project_edit_history (
-            history_id INT AUTO_INCREMENT PRIMARY KEY,
-            project_id INT NOT NULL,
-            user_id INT NOT NULL,
-            edit_type ENUM('CREATE', 'UPDATE', 'DELETE') NOT NULL,
-            field_name VARCHAR(100) NOT NULL,
-            old_value TEXT,
-            new_value TEXT,
-            edit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES project_info(project_id),
-            FOREIGN KEY (user_id) REFERENCES users(user_id)
-        );
-    ''')
-
-    # 수정 이력 테이블 (PO) 생성
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS po_edit_history (
-            history_id INT AUTO_INCREMENT PRIMARY KEY,
-            po_id INT NOT NULL,
-            user_id INT NOT NULL,
-            edit_type ENUM('CREATE', 'UPDATE', 'DELETE') NOT NULL,
-            field_name VARCHAR(100) NOT NULL,
-            old_value TEXT,
-            new_value TEXT,
-            edit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (po_id) REFERENCES po_issue(po_id),
-            FOREIGN KEY (user_id) REFERENCES users(user_id)
-        );
-    ''')
-
-    # 세션 테이블 생성
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS sessions (
-            session_id VARCHAR(100) PRIMARY KEY,
-            user_id INT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            expires_at TIMESTAMP NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(user_id)
         );
     ''')
 
@@ -148,16 +94,7 @@ def create_tables():
     conn.close()
 
 def reset_database():
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-    cursor.execute("DROP TABLE IF EXISTS project_performance")
-    cursor.execute("DROP TABLE IF EXISTS po_issue")
-    cursor.execute("DROP TABLE IF EXISTS project_info")
-    cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
-    
+    """데이터베이스 초기화"""
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
     create_tables()
-    
-    conn.commit()
-    conn.close()
